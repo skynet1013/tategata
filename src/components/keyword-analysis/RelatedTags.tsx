@@ -1,15 +1,41 @@
-import { Hash } from 'lucide-react';
+'use client';
 
-const relatedTags = [
-    { name: 'プチプラコスメ', volume: '8.5M' },
-    { name: '韓国コスメ', volume: '6.2M' },
-    { name: 'メイク動画', volume: '4.1M' },
-    { name: '新作コスメ', volume: '3.8M' },
-    { name: 'コスメレビュー', volume: '2.9M' },
-    { name: '毎日メイク', volume: '2.5M' },
-];
+import { Hash } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface Keyword {
+    id: string;
+    keyword: string;
+    volume: number;
+    trend_score: number;
+}
 
 export function RelatedTags() {
+    const [tags, setTags] = useState<Keyword[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const res = await fetch('/api/analytics/keywords');
+                const data = await res.json();
+                if (data.data) {
+                    setTags(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch tags:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTags();
+    }, []);
+
+    if (loading) {
+        return <div className="p-6 text-center">読み込み中...</div>;
+    }
+
     return (
         <div className="rounded-lg bg-white shadow-sm">
             <div className="border-b border-gray-200 px-6 py-4">
@@ -18,14 +44,20 @@ export function RelatedTags() {
                     関連タグ
                 </h3>
             </div>
-            <ul className="divide-y divide-gray-200">
-                {relatedTags.map((tag) => (
-                    <li key={tag.name} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
-                        <span className="text-sm font-medium text-gray-900">#{tag.name}</span>
-                        <span className="text-sm text-gray-500">{tag.volume} 視聴</span>
-                    </li>
-                ))}
-            </ul>
+            {tags.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                    データがありません。
+                </div>
+            ) : (
+                <ul className="divide-y divide-gray-200">
+                    {tags.map((tag) => (
+                        <li key={tag.id} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
+                            <span className="text-sm font-medium text-gray-900">#{tag.keyword}</span>
+                            <span className="text-sm text-gray-500">{tag.volume.toLocaleString()} 視聴</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 }
