@@ -1,0 +1,7 @@
+{
+    "buildCommand": "cd tategata-frontend && npm run build",
+    "devCommand": "cd tategata-frontend && npm run dev",
+    "installCommand": "cd tategata-frontend && npm install",
+    "framework": null,
+    "outputDirectory": "tategata-frontend/.next"
+}
