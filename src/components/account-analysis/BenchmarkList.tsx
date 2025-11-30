@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Trash2, ExternalLink, X } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, X, Edit2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Benchmark {
@@ -16,6 +16,7 @@ export function BenchmarkList() {
     const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         account_name: '',
         platform: 'tiktok',
@@ -43,41 +44,69 @@ export function BenchmarkList() {
         }
     };
 
+    const openAddModal = () => {
+        setEditingId(null);
+        setFormData({
+            account_name: '',
+            platform: 'tiktok',
+            followers: '',
+            engagement_rate: '',
+            image: ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (benchmark: Benchmark) => {
+        setEditingId(benchmark.id);
+        setFormData({
+            account_name: benchmark.account_name,
+            platform: benchmark.platform,
+            followers: benchmark.followers.toString(),
+            engagement_rate: benchmark.engagement_rate.toString(),
+            image: benchmark.image || ''
+        });
+        setIsModalOpen(true);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
 
         try {
+            const method = editingId ? 'PUT' : 'POST';
+            const body: any = {
+                account_name: formData.account_name,
+                platform: formData.platform,
+                followers: parseInt(formData.followers) || 0,
+                engagement_rate: parseFloat(formData.engagement_rate) || 0,
+                image: formData.image || null
+            };
+
+            if (editingId) {
+                body.id = editingId;
+            }
+
             const res = await fetch('/api/benchmarks', {
-                method: 'POST',
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    account_name: formData.account_name,
-                    platform: formData.platform,
-                    followers: parseInt(formData.followers) || 0,
-                    engagement_rate: parseFloat(formData.engagement_rate) || 0,
-                    image: formData.image || null
-                }),
+                body: JSON.stringify(body),
             });
 
             if (res.ok) {
                 const data = await res.json();
-                setBenchmarks([data.data, ...benchmarks]);
+                if (editingId) {
+                    setBenchmarks(benchmarks.map(b => b.id === editingId ? data.data : b));
+                } else {
+                    setBenchmarks([data.data, ...benchmarks]);
+                }
                 setIsModalOpen(false);
-                setFormData({
-                    account_name: '',
-                    platform: 'tiktok',
-                    followers: '',
-                    engagement_rate: '',
-                    image: ''
-                });
             } else {
-                alert('アカウントの追加に失敗しました');
+                alert(editingId ? 'アカウントの更新に失敗しました' : 'アカウントの追加に失敗しました');
             }
         } catch (error) {
-            console.error('Failed to add benchmark:', error);
+            console.error('Failed to save benchmark:', error);
             alert('エラーが発生しました');
         } finally {
             setSubmitting(false);
@@ -110,7 +139,7 @@ export function BenchmarkList() {
                 <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                     <h3 className="text-lg font-medium text-gray-900">ベンチマークアカウント</h3>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={openAddModal}
                         className="flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500"
                     >
                         <Plus className="mr-2 h-4 w-4" />
@@ -146,6 +175,12 @@ export function BenchmarkList() {
                                             <ExternalLink className="h-4 w-4" />
                                         </button>
                                         <button
+                                            onClick={() => openEditModal(account)}
+                                            className="rounded-full p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                                        >
+                                            <Edit2 className="h-4 w-4" />
+                                        </button>
+                                        <button
                                             onClick={() => handleDelete(account.id)}
                                             className="rounded-full p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
                                         >
@@ -164,7 +199,9 @@ export function BenchmarkList() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
                         <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-xl font-semibold text-gray-900">ベンチマークアカウントを追加</h2>
+                            <h2 className="text-xl font-semibold text-gray-900">
+                                {editingId ? 'ベンチマークアカウントを編集' : 'ベンチマークアカウントを追加'}
+                            </h2>
                             <button
                                 onClick={() => setIsModalOpen(false)}
                                 className="text-gray-400 hover:text-gray-600"
@@ -256,7 +293,7 @@ export function BenchmarkList() {
                                     disabled={submitting}
                                     className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
                                 >
-                                    {submitting ? '追加中...' : '追加'}
+                                    {submitting ? '保存中...' : (editingId ? '更新' : '追加')}
                                 </button>
                             </div>
                         </form>

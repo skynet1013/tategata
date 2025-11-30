@@ -1,5 +1,5 @@
 import { BenchmarkList } from '@/components/account-analysis/BenchmarkList';
-import { ComparisonCharts } from '@/components/account-analysis/ComparisonCharts';
+import { BenchmarkChart } from '@/components/account-analysis/BenchmarkChart';
 import { PostAnalysisTable } from '@/components/account-analysis/PostAnalysisTable';
 import { ExportButton } from '@/components/common/ExportButton';
 
@@ -17,7 +17,7 @@ export default function AccountAnalysisPage() {
             </div>
 
             <BenchmarkList />
-            <ComparisonCharts />
+            <BenchmarkChart />
             <PostAnalysisTable />
         </div>
     );

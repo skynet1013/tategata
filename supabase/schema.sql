@@ -49,6 +49,9 @@ CREATE POLICY "Users can insert own benchmarks" ON benchmark_accounts
 CREATE POLICY "Users can delete own benchmarks" ON benchmark_accounts
   FOR DELETE USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can update own benchmarks" ON benchmark_accounts
+  FOR UPDATE USING (auth.uid() = user_id);
+
 -- Create posts table
 CREATE TABLE IF NOT EXISTS posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

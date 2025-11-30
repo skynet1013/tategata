@@ -90,6 +90,63 @@ export async function POST(request: NextRequest) {
     }
 }
 
+export async function PUT(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions)
+
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            )
+        }
+
+        const body = await request.json()
+        const { id, account_name, platform, followers, engagement_rate, image } = body
+
+        console.log('PUT Request:', { id, body, userId: session.user.id });
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'ID is required' },
+                { status: 400 }
+            )
+        }
+
+        const supabase = await createClient()
+
+        const { data, error } = await supabase
+            .from('benchmark_accounts')
+            .update({
+                account_name,
+                platform,
+                followers,
+                engagement_rate,
+                image
+            })
+            .eq('id', id)
+            .eq('user_id', session.user.id)
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Supabase Update Error:', error);
+            return NextResponse.json(
+                { error: error.message },
+                { status: 500 }
+            )
+        }
+
+        return NextResponse.json({ data })
+    } catch (error) {
+        console.error('PUT Error:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        )
+    }
+}
+
 export async function DELETE(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
