@@ -134,3 +134,37 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- Create content_plans table
+CREATE TABLE IF NOT EXISTS content_plans (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  target_audience TEXT,
+  concept TEXT,
+  story_structure JSONB,
+  emotional_goals TEXT,
+  actor_persona TEXT,
+  viral_points TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE content_plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own content plans" ON content_plans;
+DROP POLICY IF EXISTS "Users can insert own content plans" ON content_plans;
+DROP POLICY IF EXISTS "Users can update own content plans" ON content_plans;
+DROP POLICY IF EXISTS "Users can delete own content plans" ON content_plans;
+
+CREATE POLICY "Users can view own content plans" ON content_plans
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own content plans" ON content_plans
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own content plans" ON content_plans
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own content plans" ON content_plans
+  FOR DELETE USING (auth.uid() = user_id);

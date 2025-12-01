@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { LayoutDashboard, Search, Users, TrendingUp, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Search, Users, TrendingUp, Settings, LogOut, Sparkles } from 'lucide-react';
 
 const navigation = [
   { name: 'ダッシュボード', href: '/', icon: LayoutDashboard },
+  { name: 'AI企画書作成', href: '/content-planning', icon: Sparkles },
   { name: 'キーワード分析', href: '/keyword-analysis', icon: Search },
   { name: 'アカウント分析', href: '/account-analysis', icon: Users },
   { name: 'トレンド分析', href: '/trend-analysis', icon: TrendingUp },
